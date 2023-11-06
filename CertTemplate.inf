@@ -14,7 +14,7 @@ szOID_KP_RDC_AUTH = "1.3.6.1.4.1.311.54.1.2"
     
 Subject = "CN="
 FriendlyName = "RDP_%SERVER_FQDN%"
-; Der private Schluessel ist nicht exportierbar 
+; Der private Schluessel ist exportierbar 
 ; Im Template und hier auf True setzten wenn zwischenserver genutzt wird
 Exportable = True
 ; Das Schluesselpaar wird im lokalen Maschinenspeicher erzeugt
