@@ -1,3 +1,19 @@
+<#
+.SYNOPSIS
+Updates the content of all .inf files in a specified folder by replacing the host name with a list of server names.
+
+.PARAMETER FolderPath
+The path to the folder containing the .inf files.
+
+.PARAMETER servernames
+An array of server names to replace the host name with.
+
+.EXAMPLE
+Update-InfFiles -FolderPath "C:\InfFiles" -servernames "Server1", "Server2"
+
+This example updates the content of all .inf files in the "C:\InfFiles" folder by replacing the host name with "Server1" and "Server2".
+
+#>
 function Update-InfFiles {
     param(
         [Parameter(Mandatory = $true)]
@@ -18,6 +34,34 @@ function Update-InfFiles {
     }
 }
 
+<#
+.SYNOPSIS
+Exports a certificate with a specific property value as a PFX file.
+
+.DESCRIPTION
+This function exports a certificate with a specific property value as a PFX file to the specified export path. The property and value are used to filter the certificates in the LocalMachine\My store.
+
+.PARAMETER Property
+The name of the certificate property to filter on.
+
+.PARAMETER Value
+The value of the certificate property to filter on.
+
+.PARAMETER ExportPath
+The path where the exported PFX file will be saved.
+
+.PARAMETER Password
+The password to protect the exported PFX file.
+
+.EXAMPLE
+Export-CertificateAsPFXByProperty -Property "Subject" -Value "CN=www.contoso.com" -ExportPath "C:\certs\www.contoso.com.pfx" -Password $securePassword
+
+Exports the certificate with Subject equal to "CN=www.contoso.com" as a PFX file to "C:\certs\www.contoso.com.pfx" with the specified password.
+
+.NOTES
+Author: Jan Tiedemann
+Date: 06/11/2023
+#>
 function Export-CertificateAsPFXByProperty {
     param(
         [string]$Property,
@@ -42,9 +86,18 @@ function Export-CertificateAsPFXByProperty {
         Write-Error "Not allowed to export found certificate with $Property equal to $Value"
         return $false
     }
-
 }
 
+<#
+.SYNOPSIS
+    Reads a secure string from the user input.
+.DESCRIPTION
+    Prompts the user to enter a secure string and returns the entered value as a secure string.
+.PARAMETER Prompt
+    The message to display to the user when prompting for input.
+.EXAMPLE
+    $secureString = Read-SecureString -Prompt "Enter your password"
+#>
 function Read-SecureString {
     param(
         [string]$Prompt
@@ -54,6 +107,26 @@ function Read-SecureString {
     return $secureString
 }
 
+<#
+.SYNOPSIS
+    Creates a custom certificate request and submits it to a certificate authority.
+.DESCRIPTION
+    This function creates a custom certificate request based on an .inf file and submits it to a certificate authority.
+.PARAMETER InfFilePath
+    The file path of the .inf template with the certificate definition.
+.PARAMETER servernames
+    The server DNS name that will be in the certificate.
+.PARAMETER CAName
+    The name of the certificate authority.
+.PARAMETER OutputDir
+    The output directory for the generated files.
+.PARAMETER RemoveTempFiles
+    Specifies whether to remove temporary files after the request is submitted.
+.OUTPUTS
+    System.Management.Automation.PSObject
+.EXAMPLE
+    New-CustomCertificateRequest -InfFilePath "C:\certificates\mycert.inf" -servernames "myserver1", "myserver2" -CAName "MyCA" -OutputDir "C:\certificates" -RemoveTempFiles
+#>
 Function New-CustomCertificateRequest {
     [OutputType('System.Management.Automation.PSObject')]
     [CmdletBinding(DefaultParameterSetName = 'InfAsFile')]
@@ -155,6 +228,17 @@ Function New-CustomCertificateRequest {
     return $MyArray 
 }
 
+<#
+.SYNOPSIS
+    Searches for a specified string in an array or string input and returns all lines that contain the string.
+.PARAMETER InputContent
+    The input content to search. Must be a string or an array.
+.PARAMETER SearchString
+    The string to search for in the input content.
+.EXAMPLE
+    $output = Search-Output -InputContent $content -SearchString "error"
+    Returns all lines in $content that contain the string "error".
+#>
 function Search-Output {
     param(
         $InputContent,
@@ -184,6 +268,17 @@ function Search-Output {
     return $mylines
 }
 
+<#
+.SYNOPSIS
+    Gets the fully qualified domain name (FQDN) from a given input string.
+.DESCRIPTION
+    This function uses a regular expression to extract the FQDN from a given input string.
+.PARAMETER InputString
+    The input string from which to extract the FQDN.
+.EXAMPLE
+    Get-FQDN "https://www.example.com/path/to/resource"
+    Returns: "www.example.com"
+#>
 function Get-FQDN {
     param(
         [Parameter(Mandatory = $true)]
@@ -199,7 +294,30 @@ function Get-FQDN {
 
     return $null
 }
+}
 
+<#
+.SYNOPSIS
+Removes the last backslash character from a string.
+
+.DESCRIPTION
+This function removes the last backslash character from a string, if it exists.
+
+.PARAMETER Path
+The string to remove the last backslash character from.
+
+.EXAMPLE
+Remove-LastBackslash "C:\Users\johndoe\Documents\"
+Returns: "C:\Users\johndoe\Documents"
+
+.EXAMPLE
+Remove-LastBackslash "C:\Users\johndoe\Documents"
+Returns: "C:\Users\johndoe\Documents"
+
+.NOTES
+Author: Jan Tiedemann
+Date: 06/11/2023
+#>
 function Remove-LastBackslash {
     param(
         [Parameter(Mandatory = $true)]
