@@ -294,7 +294,7 @@ function Get-FQDN {
 
     return $null
 }
-}
+
 
 <#
 .SYNOPSIS
