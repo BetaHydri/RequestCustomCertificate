@@ -216,12 +216,14 @@ function Remove-LastBackslash {
 
 ## MAIN Program
 
-# Define empty Array to Store the Thumbprints of the certificates to export
+# Define empty Array to store the Thumbprints of the certificates to export
 $MyThumbprints = @()
-# Define the path where the .inf template are located with the certificate definition
+
+# Define the FQDNs of all Servers that will be in the certificate request to the CAName
 $servers = "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com"
 
 # Request the certificates and store the RequestIDs or Thumbprints in an array
+# If request must be approved by CA admin, the RequestIDs will be stored in the array and the requestID will be saved in the output folder
 $requestIDs = New-CustomCertificateRequest -InfFilePath .\CertTemplate.inf -servernames $servers -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
 
 # Export the certificates as PFX files after searching for the Thumbprints in requestIDs output.
@@ -239,9 +241,4 @@ else {
     $requestIDs
     return $false
 }
-
-
-
-
-
-
+```
