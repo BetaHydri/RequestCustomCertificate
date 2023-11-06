@@ -332,6 +332,29 @@ function Remove-LastBackslash {
 }
 
 
+<#
+.SYNOPSIS
+    This script requests custom certificates for a list of servers and exports them as PFX files.
+.DESCRIPTION
+    This script requests custom certificates for a list of servers and exports them as PFX files.
+    The script defines an empty array to store the Thumbprints of the certificates to export.
+    It also defines the FQDNs of all servers that will be in the certificate request to the CAName.
+    The certificates are requested and stored in an array.
+    If the request must be approved by the CA admin, the RequestIDs will be stored in the array and the requestID will be saved in the output folder.
+    The certificates are exported as PFX files after searching for the Thumbprints in requestIDs output.
+.PARAMETER InfFilePath
+    Specifies the path to the INF file that contains the certificate template information.
+.PARAMETER servernames
+    Specifies an array of server names for which the certificate is requested.
+.PARAMETER CAName
+    Specifies the name of the certification authority (CA) that issues the certificate.
+.PARAMETER OutputDir
+    Specifies the path to the output directory where the certificate request files and PFX files are saved.
+.PARAMETER RemoveTempFiles
+    Specifies whether to remove the temporary files created during the certificate request process.
+.EXAMPLE
+    .\RequestCustomCertificate.ps1 -InfFilePath .\CertTemplate.inf -servernames "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com" -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
+#>
 ## MAIN Program
 
 # Define empty Array to store the Thumbprints of the certificates to export
