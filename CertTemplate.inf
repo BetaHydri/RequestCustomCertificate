@@ -1,0 +1,40 @@
+[Version]
+Signature = "$Windows NT$"
+
+[Strings]
+; Die folgende Variable an die Umgebung anpassen
+SERVER_FQDN = HOSTFQDN
+
+; Nachfolgende Strings nicht bearbeiten
+szOID_SUBJECT_ALT_NAME2 = "2.5.29.17" 
+szOID_ENHANCED_KEY_USAGE = "2.5.29.37" 
+szOID_KP_RDC_AUTH = "1.3.6.1.4.1.311.54.1.2"
+
+[NewRequest]
+    
+Subject = "CN="
+FriendlyName = "RDP_%SERVER_FQDN%"
+; Der private Schluessel ist nicht exportierbar 
+; Im Template und hier auf True setzten wenn zwischenserver genutzt wird
+Exportable = True
+; Das Schluesselpaar wird im lokalen Maschinenspeicher erzeugt
+MachineKeySet = True
+; Empfohlene Schluessellaengen: 2048, 3072, 4096
+; 2048 Bit sollten nur noch bis 2021 verwendet werden
+; Vor Erhöhung der Schluessellaenge sollte die Kompatibilitaet sichergestellt sein
+KeyLength = 2048
+; AT_KEYEXCHANGE 
+KeySpec = 1
+; Digital Signature, Key Encipherment 
+KeyUsage = 0xA0
+ProviderName = "Microsoft RSA SChannel Cryptographic Provider"
+ProviderType = 12
+SMIME = FALSE
+RequestType = CMC
+
+[RequestAttributes]
+CertificateTemplate=RemoteDesktopComputerManualAuto
+
+[Extensions]
+%szOID_SUBJECT_ALT_NAME2% = "{text}dns=%SERVER_FQDN%"  
+%szOID_ENHANCED_KEY_USAGE% = "{text}%szOID_KP_RDC_AUTH%"
