@@ -11,7 +11,7 @@
 ### .PARAMETER servernames
     Specifies an array of server names for which the certificate is requested.
 
-## .PARAMETER CAName
+### .PARAMETER CAName
     Specifies the name of the certification authority (CA) that issues the certificate.
 
 ### .PARAMETER OutputDir
