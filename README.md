@@ -22,7 +22,7 @@
 
 > 📘INFO
 > 
-> Includes functions:
+> New functions + helpers:
 > - <b>New-CustomCertificateRequest</b> - Returns requestIDs when certificate requests returns state <b>pending</b>, or imports .cer with private key files when certificate request was in state <b>issued</b>.
 > - <b>Export-CertificateAsPFXByProperty</b> - Exports the certificates as PFX file by protecting the .pfx using the password. 
    
