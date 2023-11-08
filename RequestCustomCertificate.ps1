@@ -129,7 +129,7 @@ function Read-SecureString {
 #>
 Function New-CustomCertificateRequest {
     [OutputType('System.Management.Automation.PSObject')]
-    [CmdletBinding(DefaultParameterSetName = 'InfAsFile')]
+    [CmdletBinding(DefaultParameterSetName = 'InfFilePath')]
     param(
         
         [Parameter(Mandatory = $true,
