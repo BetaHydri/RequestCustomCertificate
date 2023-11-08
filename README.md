@@ -3,7 +3,7 @@
 ## This script requests custom certificates for a list of servers and exports them as PFX files.
 
 - This script requests custom certificates based on a .inf request template for a list of servers and exports them as PFX files.<br>
-- If the request must be approved by the CA admin, the RequestIDs will be stored in the array and the requestID will be saved in the output folder.<br>
+- If the request must be approved by the CA admin, the RequestIDs will be stored in the array and the requestID will be saved in the output directory.<br>
 
 ### .PARAMETER InfFilePath
     Specifies the path to the INF file that contains the certificate template information.
