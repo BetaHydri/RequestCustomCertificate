@@ -2,7 +2,7 @@
 Signature = "$Windows NT$"
 
 [Strings]
-; Die folgende Variable an die Umgebung anpassen
+; Der folgende String (Inf Variable) wird vom Skript mit den server fqdn's ersaetzt
 SERVER_FQDN = HOSTFQDN
 
 ; Nachfolgende Strings nicht bearbeiten
