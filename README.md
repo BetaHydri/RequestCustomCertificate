@@ -24,7 +24,8 @@
 > 
 > New functions + helpers:
 > - <b>New-CustomCertificateRequest</b> - Returns requestIDs when certificate requests returns state <b>pending</b>, or imports .cer with private key files when certificate request was in state <b>issued</b>.
-> - <b>Export-CertificateAsPFXByProperty</b> - Exports the certificates as PFX file by protecting the .pfx using the password. 
+> - <b>Export-CertificateAsPFXByProperty</b> - Exports the certificates as PFX file by protecting the .pfx using the password.
+> - <b>Search-Output</b> - Searches for a specified string in an array or string input and returns all matches that contain the search string. 
    
 ### Sample usage:
 ```
