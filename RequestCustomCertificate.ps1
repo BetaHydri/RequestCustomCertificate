@@ -70,7 +70,7 @@ function Export-CertificateAsPFXByProperty {
         [securestring]$Password
     )
 
-    $certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $Property -eq $Value }
+    $certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.$($Property) -eq $Value }
     if ($certs.Count -eq 0) {
         Write-Error "No certificate found with $Property equal to $Value"
         return $false
@@ -188,8 +188,14 @@ Function New-CustomCertificateRequest {
     foreach ($infFile in $newInffiles) {
         $fqdn = get-fqdn -InputString $infFile
         $fqdn = $fqdn.Substring(0, $infFile.Length - 7)
-        certreq -new "$infFile" "$OutputDir\$fqdn.reg"
-        $newRegFiles += "$OutputDir\$fqdn.reg"
+        $reqout = certreq -new -f -q "$infFile" "$OutputDir\$fqdn.reg"
+        if ($reqout -like "*The entry already exists*") {
+            Write-Error "The entry already exists"
+            return $false
+        }
+        else {
+            $newRegFiles += "$OutputDir\$fqdn.reg"           
+        }
     }
     $MyArray = @()    
     # submit a request to the certificate authority
@@ -197,25 +203,25 @@ Function New-CustomCertificateRequest {
         $reqoutput = $null
         $fqdn = get-fqdn -InputString $regFile
         $fqdn = $fqdn.Substring(0, $regFile.Length - 7)    
-        $reqoutput = certreq -submit -config "$($CAName)" $regFile "$OutputDir\$fqdn.cer"
+        $reqout = certreq -submit -f -q -config "$($CAName)" $regFile "$OutputDir\$fqdn.cer"
 
         # parse via regex the certificate RequestId from the output of certreg -new
         [regex]$parseout = '^(?<property>\w+):\s*(?<value>\d+)'
-        foreach ($line in $reqoutput) {
+        foreach ($line in $reqout) {
             if ($line -match $parseout) {
                 $Matches.Remove(0)         
                 $MyArray += [PSCustomObject]$Matches
             }
         }
-        if ($reqoutput -like "*pending:*") {
+        if ($reqout -like "*pending:*") {
             $fileName = "RequestID_" + $fqdn + "_$(Get-Date -Format 'dd-MM-yyyy_HH-mm-ss').log" 
             Out-File -InputObject "$($MyArray.Property) = $($MyArray.Value)" -FilePath "$OutputDir\$fileName"
         }
-        elseif ($reqoutput -like "*Issued*") {
+        elseif ($reqout -like "*Issued*") {
             $newCerFiles = Get-ChildItem -Path $OutputDir -Filter *.cer
             foreach ($cerFile in $newCerFiles) {
                 # accept and install PFX certificate into machine or user certificate store
-                CertReq -machine -Accept $cerFile 
+                CertReq -machine -q -f -Accept $cerFile 
             }
         }
     }
@@ -285,8 +291,8 @@ function Get-FQDN {
         [string]$InputString
     )
 
-    $regex = [regex]"\b((\w+\.)+\w+)\b"
-    $match = $regex.Match($InputString)
+    $regex = [regex]"\b(([a-z0-9][a-z0-9\-]*[a-z0-9])|[a-z0-9]+\.)*([a-z]+|xn\-\-[a-z0-9]+)\b"
+    $match = $regex.Match($InputString.Trim())
 
     if ($match.Success) {
         return $match.Value
@@ -364,18 +370,26 @@ $servers = "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com"
 # If request must be approved by CA admin, the RequestIDs will be stored in the array and the requestID will be saved in the output folder
 $requestIDs = New-CustomCertificateRequest -InfFilePath .\CertTemplate.inf -servernames $servers -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
 
-# Export the certificates as PFX files after searching for the Thumbprints in requestIDs output.
-$certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "RDP_*" }
-if ($certs.Count -ne 0) {
-    $password = Read-SecureString -Prompt "Enter password for PFX file"  
-    foreach ($cert in $certs) {
-        #$thumbprint = $($thumbprint.Substring(14))
-        #$cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq $thumbprint }
-        $cert | Export-CertificateAsPFXByProperty -Property 'Thumbprint' -Value $cert.Thumbprint -ExportPath ".\$($cert.DnsNameList.Unicode).pfx" -Password $password
-    }
+if ($requestIDs -eq $false) {
+    Write-Error "Error while requesting certificates"
+    return $false
 }
 else {
-    Write-Error "No Thumbprints found in var requestIDs"
-    $requestIDs
-    return $false
+    Write-Output "Exporting certificates as PFX files..."
+
+    # Export the certificates as PFX files after searching for the Thumbprints in requestIDs output.
+    foreach ($server in $servers) {
+        $certs += Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "RDP_$server" }
+    }
+    if ($certs.Count -ne 0) {
+        $password = Read-SecureString -Prompt "Enter password for PFX file"  
+        foreach ($cert in $certs) {
+            $cert | Export-CertificateAsPFXByProperty -Property 'Thumbprint' -Value $cert.Thumbprint -ExportPath ".\$($cert.DnsNameList.Unicode).pfx" -Password $password
+        }
+    }
+    else {
+        Write-Error "No Thumbprints found in var requestIDs"
+        $requestIDs
+        return $false
+    }
 }
