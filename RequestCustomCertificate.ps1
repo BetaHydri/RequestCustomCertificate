@@ -187,7 +187,7 @@ Function New-CustomCertificateRequest {
     # create a new custom request file from an .inf file
     foreach ($infFile in $newInffiles) {
         $fqdn = get-fqdn -InputString $infFile
-        $fqdn = $fqdn.Substring(0, $infFile.Length - 7)
+        $fqdn = $fqdn.Substring(0, $fqdn.Length - 4)
         $reqout = certreq -new -f -q "$infFile" "$OutputDir\$fqdn.reg"
         if ($reqout -like "*The entry already exists*") {
             Write-Error "The entry already exists"
@@ -200,9 +200,8 @@ Function New-CustomCertificateRequest {
     $MyArray = @()    
     # submit a request to the certificate authority
     foreach ($regFile in $newRegFiles) {
-        $reqoutput = $null
         $fqdn = get-fqdn -InputString $regFile
-        $fqdn = $fqdn.Substring(0, $regFile.Length - 7)    
+        $fqdn = $fqdn.Substring(0, $fqdn.Length - 4)    
         $reqout = certreq -submit -f -q -config "$($CAName)" $regFile "$OutputDir\$fqdn.cer"
 
         # parse via regex the certificate RequestId from the output of certreg -new
@@ -291,7 +290,7 @@ function Get-FQDN {
         [string]$InputString
     )
 
-    $regex = [regex]"\b(([a-z0-9][a-z0-9\-]*[a-z0-9])|[a-z0-9]+\.)*([a-z]+|xn\-\-[a-z0-9]+)\b"
+    $regex = [regex]"\b(([a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])|[a-zA-Z0-9]+\.)*([a-zA-Z]+|xn\-\-[a-zA-Z0-9]+)\b"
     $match = $regex.Match($InputString.Trim())
 
     if ($match.Success) {
@@ -362,7 +361,7 @@ function Remove-LastBackslash {
     .\RequestCustomCertificate.ps1 -InfFilePath .\CertTemplate.inf -servernames "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com" -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
 #>
 ## MAIN Program
-
+$certs = @()
 # Define the FQDNs of all Servers that will be in the certificate request to the CAName
 $servers = "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com"
 
@@ -379,7 +378,7 @@ else {
 
     # Export the certificates as PFX files after searching for the Thumbprints in requestIDs output.
     foreach ($server in $servers) {
-        $certs += Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "RDP_$server" }
+        $certs += Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "RDP_$($server)" }
     }
     if ($certs.Count -ne 0) {
         $password = Read-SecureString -Prompt "Enter password for PFX file"  
