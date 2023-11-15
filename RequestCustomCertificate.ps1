@@ -70,7 +70,7 @@ function Export-CertificateAsPFXByProperty {
         [securestring]$Password
     )
 
-    $certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.$Property -eq $Value }
+    $certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $Property -eq $Value }
     if ($certs.Count -eq 0) {
         Write-Error "No certificate found with $Property equal to $Value"
         return $false
@@ -357,9 +357,6 @@ function Remove-LastBackslash {
 #>
 ## MAIN Program
 
-# Define empty Array to store the Thumbprints of the certificates to export
-$MyThumbprints = @()
-
 # Define the FQDNs of all Servers that will be in the certificate request to the CAName
 $servers = "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com"
 
@@ -368,13 +365,13 @@ $servers = "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com"
 $requestIDs = New-CustomCertificateRequest -InfFilePath .\CertTemplate.inf -servernames $servers -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
 
 # Export the certificates as PFX files after searching for the Thumbprints in requestIDs output.
-[string[]]$MyThumbprints = Search-Output -InputContent $requestIDs -SearchString 'Thumbprint:'
-if ($MyThumbprints.Count -ne 0) {
+$certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "RDP_*" }
+if ($certs.Count -ne 0) {
     $password = Read-SecureString -Prompt "Enter password for PFX file"  
-    foreach ($thumbprint in $MyThumbprints) {
-        $thumbprint = $($thumbprint.Substring(14))
-        $cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq $thumbprint }
-        $cert | Export-CertificateAsPFXByProperty -Property Thumbprint -Value $thumbprint -ExportPath ".\$($cert.DnsNameList.Unicode).pfx" -Password $password
+    foreach ($cert in $certs) {
+        #$thumbprint = $($thumbprint.Substring(14))
+        #$cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.Thumbprint -eq $thumbprint }
+        $cert | Export-CertificateAsPFXByProperty -Property 'Thumbprint' -Value $cert.Thumbprint -ExportPath ".\$($cert.DnsNameList.Unicode).pfx" -Password $password
     }
 }
 else {
@@ -382,4 +379,3 @@ else {
     $requestIDs
     return $false
 }
-```
