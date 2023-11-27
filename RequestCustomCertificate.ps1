@@ -1,3 +1,5 @@
+#region functions
+
 <#
 .SYNOPSIS
 Updates the content of all .inf files in a specified folder by replacing the host name with a list of server names.
@@ -12,70 +14,71 @@ An array of server names to replace the host name with.
 Update-InfFiles -FolderPath "C:\InfFiles" -servernames "Server1", "Server2"
 
 This example updates the content of all .inf files in the "C:\InfFiles" folder by replacing the host name with "Server1" and "Server2".
-
 #>
 function Update-InfFiles {
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$FolderPath,
         [Parameter(Mandatory = $true)]
         [array]$servernames
     )
-
+    
     $infFiles = Get-ChildItem -Path $FolderPath -Filter *.inf
-
+    
     foreach ($file in $infFiles) {
         $content = Get-Content -Path $file.FullName -Raw
         foreach ($server in $servernames) {
             $content = $content -replace $Host, $server
         }
-
+    
         Write-Output $content
     }
 }
 
 <#
-.SYNOPSIS
-Exports a certificate with a specific property value as a PFX file.
-
-.DESCRIPTION
-This function exports a certificate with a specific property value as a PFX file to the specified export path. The property and value are used to filter the certificates in the LocalMachine\My store.
-
-.PARAMETER Property
-The name of the certificate property to filter on.
-
-.PARAMETER Value
-The value of the certificate property to filter on.
-
-.PARAMETER ExportPath
-The path where the exported PFX file will be saved.
-
-.PARAMETER Password
-The password to protect the exported PFX file.
-
-.EXAMPLE
-Export-CertificateAsPFXByProperty -Property "Subject" -Value "CN=www.contoso.com" -ExportPath "C:\certs\www.contoso.com.pfx" -Password $securePassword
-
-Exports the certificate with Subject equal to "CN=www.contoso.com" as a PFX file to "C:\certs\www.contoso.com.pfx" with the specified password.
-
-.NOTES
-Author: Jan Tiedemann
-Date: 06/11/2023
+    .SYNOPSIS
+    Exports a certificate with a specific property value as a PFX file.
+    
+    .DESCRIPTION
+    This function exports a certificate with a specific property value as a PFX file to the specified export path. The property and value are used to filter the certificates in the LocalMachine\My store.
+    
+    .PARAMETER Property
+    The name of the certificate property to filter on.
+    
+    .PARAMETER Value
+    The value of the certificate property to filter on.
+    
+    .PARAMETER ExportPath
+    The path where the exported PFX file will be saved.
+    
+    .PARAMETER Password
+    The password to protect the exported PFX file.
+    
+    .EXAMPLE
+    Export-CertificateAsPFXByProperty -Property "Subject" -Value "CN=www.contoso.com" -ExportPath "C:\certs\www.contoso.com.pfx" -Password $securePassword
+    
+    Exports the certificate with Subject equal to "CN=www.contoso.com" as a PFX file to "C:\certs\www.contoso.com.pfx" with the specified password.
+    
+    .NOTES
+    Author: Jan Tiedemann
+    Date: 06/11/2023
 #>
 function Export-CertificateAsPFXByProperty {
+    [CmdletBinding()]
     param(
         [string]$Property,
         [string]$Value,
         [string]$ExportPath,
         [securestring]$Password
     )
-
+    
     $certs = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object { $_.$($Property) -eq $Value }
     if ($certs.Count -eq 0) {
         Write-Error "No certificate found with $Property equal to $Value"
         return $false
     }
-
+    
     $cert = $certs[0]
     try {
         $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx, $Password)
@@ -89,69 +92,70 @@ function Export-CertificateAsPFXByProperty {
 }
 
 <#
-.SYNOPSIS
-    Reads a secure string from the user input.
-.DESCRIPTION
-    Prompts the user to enter a secure string and returns the entered value as a secure string.
-.PARAMETER Prompt
-    The message to display to the user when prompting for input.
-.EXAMPLE
-    $secureString = Read-SecureString -Prompt "Enter your password"
+    .SYNOPSIS
+        Reads a secure string from the user input.
+    .DESCRIPTION
+        Prompts the user to enter a secure string and returns the entered value as a secure string.
+    .PARAMETER Prompt
+        The message to display to the user when prompting for input.
+    .EXAMPLE
+        $secureString = Read-SecureString -Prompt "Enter your password"
 #>
 function Read-SecureString {
+    [CmdletBinding()] 
     param(
         [string]$Prompt
     )
-
+    
     $secureString = Read-Host -Prompt $Prompt -AsSecureString
     return $secureString
 }
 
 <#
-.SYNOPSIS
-    Creates a custom certificate request and submits it to a certificate authority.
-.DESCRIPTION
-    This function creates a custom certificate request based on an .inf file and submits it to a certificate authority.
-.PARAMETER InfFilePath
-    The file path of the .inf template with the certificate definition.
-.PARAMETER servernames
-    The server DNS name that will be in the certificate.
-.PARAMETER CAName
-    The name of the certificate authority.
-.PARAMETER OutputDir
-    The output directory for the generated files.
-.PARAMETER RemoveTempFiles
-    Specifies whether to remove temporary files after the request is submitted.
-.OUTPUTS
-    System.Management.Automation.PSObject
-.EXAMPLE
-    New-CustomCertificateRequest -InfFilePath "C:\certificates\mycert.inf" -servernames "myserver1", "myserver2" -CAName "MyCA" -OutputDir "C:\certificates" -RemoveTempFiles
+    .SYNOPSIS
+        Creates a custom certificate request and submits it to a certificate authority.
+    .DESCRIPTION
+        This function creates a custom certificate request based on an .inf file and submits it to a certificate authority.
+    .PARAMETER InfFilePath
+        The file path of the .inf template with the certificate definition.
+    .PARAMETER servernames
+        The server DNS name that will be in the certificate.
+    .PARAMETER CAName
+        The name of the certificate authority.
+    .PARAMETER OutputDir
+        The output directory for the generated files.
+    .PARAMETER RemoveTempFiles
+        Specifies whether to remove temporary files after the request is submitted.
+    .OUTPUTS
+        System.Management.Automation.PSObject
+    .EXAMPLE
+        New-CustomCertificateRequest -InfFilePath "C:\certificates\mycert.inf" -servernames "myserver1", "myserver2" -CAName "MyCA" -OutputDir "C:\certificates" -RemoveTempFiles
 #>
 Function New-CustomCertificateRequest {
     [OutputType('System.Management.Automation.PSObject')]
     [CmdletBinding(DefaultParameterSetName = 'InfFilePath')]
     param(
-        
+            
         [Parameter(Mandatory = $true,
             ParameterSetName = 'InfFilePath',
             HelpMessage = "Enter the file path of the .inf template with the certificate definition")]
         [string]$InfFilePath,
-
+    
         [Parameter(Mandatory = $true,
             ParameterSetName = 'InfFilePath',
             HelpMessage = "Enter the server DNS name that will be in the certificate")]
         [array]$servernames,
-        
+            
         [Parameter(Mandatory = $true,
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true)]
         [string]$CAName,
-
+    
         [Parameter(Mandatory = $true,
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true)]
         [string]$OutputDir,
-        
+            
         [Parameter(Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false)]
@@ -160,11 +164,12 @@ Function New-CustomCertificateRequest {
     $newInffiles = @()
     $newRegFiles = @()  
     $newCerFiles = @() 
-
+    
     # remove last backslash from path
+    $OutputDir = Remove-lastbackslash -Path $OutputDir
     $t = Get-ChildItem -Path $InfFilePath
     [string]$InfFolderPath = $t.Directory.FullName
-    
+        
     if ($PSCmdlet.ParameterSetName -eq 'InfFilePath') {
         $infFiles = Get-ChildItem -Path $InfFolderPath -Filter $t.Name
         foreach ($file in $infFiles) {
@@ -188,7 +193,7 @@ Function New-CustomCertificateRequest {
     foreach ($infFile in $newInffiles) {
         $fqdn = get-fqdn -InputString $infFile
         $fqdn = $fqdn.Substring(0, $fqdn.Length - 4)
-        $reqout = certreq -new -f -q "$infFile" "$OutputDir\$fqdn.reg"
+        $reqout = certreq -new -f -q "$($infFile)" "$($OutputDir)\$($fqdn).reg"
         if ($reqout -like "*The entry already exists*") {
             Write-Error "The entry already exists"
             return $false
@@ -203,7 +208,7 @@ Function New-CustomCertificateRequest {
         $fqdn = get-fqdn -InputString $regFile
         $fqdn = $fqdn.Substring(0, $fqdn.Length - 4)    
         $reqout = certreq -submit -f -q -config "$($CAName)" $regFile "$OutputDir\$fqdn.cer"
-
+    
         # parse via regex the certificate RequestId from the output of certreg -new
         [regex]$parseout = '^(?<property>\w+):\s*(?<value>\d+)'
         foreach ($line in $reqout) {
@@ -234,17 +239,18 @@ Function New-CustomCertificateRequest {
 }
 
 <#
-.SYNOPSIS
-    Searches for a specified string in an array or string input and returns all lines that contain the string.
-.PARAMETER InputContent
-    The input content to search. Must be a string or an array.
-.PARAMETER SearchString
-    The string to search for in the input content.
-.EXAMPLE
-    $output = Search-Output -InputContent $content -SearchString "error"
-    Returns all lines in $content that contain the string "error".
+    .SYNOPSIS
+        Searches for a specified string in an array or string input and returns all lines that contain the string.
+    .PARAMETER InputContent
+        The input content to search. Must be a string or an array.
+    .PARAMETER SearchString
+        The string to search for in the input content.
+    .EXAMPLE
+        $output = Search-Output -InputContent $content -SearchString "error"
+        Returns all lines in $content that contain the string "error".
 #>
 function Search-Output {
+    [CmdletBinding()]
     param(
         $InputContent,
         [string]$SearchString
@@ -274,68 +280,72 @@ function Search-Output {
 }
 
 <#
-.SYNOPSIS
-    Gets the fully qualified domain name (FQDN) from a given input string.
-.DESCRIPTION
-    This function uses a regular expression to extract the FQDN from a given input string.
-.PARAMETER InputString
-    The input string from which to extract the FQDN.
-.EXAMPLE
-    Get-FQDN "https://www.example.com/path/to/resource"
-    Returns: "www.example.com"
+    .SYNOPSIS
+        Gets the fully qualified domain name (FQDN) from a given input string.
+    .DESCRIPTION
+        This function uses a regular expression to extract the FQDN from a given input string.
+    .PARAMETER InputString
+        The input string from which to extract the FQDN.
+    .EXAMPLE
+        Get-FQDN "https://www.example.com/path/to/resource"
+        Returns: "www.example.com"
 #>
 function Get-FQDN {
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$InputString
     )
-
-    $regex = [regex]"\b(([a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])|[a-zA-Z0-9]+\.)*([a-zA-Z]+|xn\-\-[a-zA-Z0-9]+)\b"
+    
+    $regex = [regex]"((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))$"
     $match = $regex.Match($InputString.Trim())
-
+    
     if ($match.Success) {
         return $match.Value
     }
-
+    
     return $null
 }
 
-
 <#
-.SYNOPSIS
-Removes the last backslash character from a string.
-
-.DESCRIPTION
-This function removes the last backslash character from a string, if it exists.
-
-.PARAMETER Path
-The string to remove the last backslash character from.
-
-.EXAMPLE
-Remove-LastBackslash "C:\Users\johndoe\Documents\"
-Returns: "C:\Users\johndoe\Documents"
-
-.EXAMPLE
-Remove-LastBackslash "C:\Users\johndoe\Documents"
-Returns: "C:\Users\johndoe\Documents"
-
-.NOTES
-Author: Jan Tiedemann
-Date: 06/11/2023
+    .SYNOPSIS
+    Removes the last backslash character from a string.
+    
+    .DESCRIPTION
+    This function removes the last backslash character from a string, if it exists.
+    
+    .PARAMETER Path
+    The string to remove the last backslash character from.
+    
+    .EXAMPLE
+    Remove-LastBackslash "C:\Users\johndoe\Documents\"
+    Returns: "C:\Users\johndoe\Documents"
+    
+    .EXAMPLE
+    Remove-LastBackslash "C:\Users\johndoe\Documents"
+    Returns: "C:\Users\johndoe\Documents"
+    
+    .NOTES
+    Author: Jan Tiedemann
+    Date: 06/11/2023
 #>
 function Remove-LastBackslash {
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$Path
     )
-
+    
     if ($Path.EndsWith("\")) {
         return $Path.Substring(0, $Path.Length - 1)
     }
-
+    
     return $Path
 }
 
+#endregion functions
+
+#region Main
 
 <#
 .SYNOPSIS
@@ -360,14 +370,28 @@ function Remove-LastBackslash {
 .EXAMPLE
     .\RequestCustomCertificate.ps1 -InfFilePath .\CertTemplate.inf -servernames "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com" -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
 #>
-## MAIN Program
+
+# Set error handling
+$ErrorActionPreference = "Stop"
+trap {
+    Write-Warning "Script failed: $_"
+    throw $_
+}
+
+# Set script variables
+$ScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+$InfFilePath = "$($ScriptPath)\CertTemplate.inf"
+$OutputPath = "$($ScriptPath)\"
+
+# Define an empty array to store the Thumbprints of the certificates to export
 $certs = @()
+
 # Define the FQDNs of all Servers that will be in the certificate request to the CAName
 $servers = "Test07.contoso.com", "Test08.contoso.com", "Test09.contoso.com"
 
 # Request the certificates and store the RequestIDs or Thumbprints in an array
 # If request must be approved by CA admin, the RequestIDs will be stored in the array and the requestID will be saved in the output folder
-$requestIDs = New-CustomCertificateRequest -InfFilePath .\CertTemplate.inf -servernames $servers -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir '.\' -RemoveTempFiles
+$requestIDs = New-CustomCertificateRequest -InfFilePath $InfFilePath -servernames $servers -CAName 'AO-PKI.contoso.com\contoso-AO-PKI-CA' -OutputDir $OutputPath -RemoveTempFiles
 
 if ($requestIDs -eq $false) {
     Write-Error "Error while requesting certificates"
@@ -392,3 +416,5 @@ else {
         return $false
     }
 }
+
+#endregion Main
