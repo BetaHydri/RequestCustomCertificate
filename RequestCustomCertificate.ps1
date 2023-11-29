@@ -407,7 +407,7 @@ else {
     if ($certs.Count -ne 0) {
         $password = Read-SecureString -Prompt "Enter password for PFX file"  
         foreach ($cert in $certs) {
-            $cert | Export-CertificateAsPFXByProperty -Property 'Thumbprint' -Value $cert.Thumbprint -ExportPath ".\$($cert.DnsNameList.Unicode).pfx" -Password $password
+            $cert | Export-CertificateAsPFXByProperty -Property 'Thumbprint' -Value $cert.Thumbprint -ExportPath "$OutputPath$($cert.DnsNameList.Unicode).pfx" -Password $password
         }
     }
     else {
